@@ -165,9 +165,9 @@ export class GCGetter {
                 //const fintitle = titlenew.;
                 const token = await persistence.getAT(context.getSender());
                 const quick_url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/quickAdd?key=${api_key}&text=${title_new[1]}`;
-                const quick_api_response = await http.post(quick_url, { headers: { 'Authorization': `Bearer ${token}`, } });
+                const quick_api_response = await http.post(quick_url, { headers: { Authorization: `Bearer ${token}`, } });
                 console.log('This is the quick-add response', quick_api_response);
-                if (quick_api_response && quick_api_response.statusCode == HttpStatusCode.OK) {
+                if (quick_api_response && quick_api_response.statusCode === HttpStatusCode.OK) {
                     // const msg = modify.getCreator().startMessage().setSender(context.getSender()).setRoom(context.getRoom());
                     message.setText('Quickadd event succcessfully created!');
                     await modify.getCreator().finish(message);
@@ -179,31 +179,40 @@ export class GCGetter {
                 const list_token = await persistence.getAT(context.getSender());
                 const list_url = `https://www.googleapis.com/calendar/v3/users/me/calendarList?key=${api_key}`;
                 const list_api_response = await http.get(list_url, { headers: { 'Authorization': `Bearer ${list_token}`, } });
-                console.log('This is the calendar list respose:', list_api_response);
+                console.log('DOUGLAS CONSOLE MESSAGE', list_api_response.data.items);
 
-                let all_calendars: Array<string> = list_api_response.data.items;
+                // let all_calendars = (list_api_response.data.items as Array<any>).map((value) => value.summary);
 
-                for (var i = 0; i < list_api_response.data.items.length; i++) {
-                    all_calendars[i] = list_api_response.data.items[i].summary;
-                }
-
-                console.log('This is calendar name inside list command:', all_calendars[2])
-                message.addAttachment({
-                    color: '#73a7ce',
-                    text: all_calendars.map((option, index) => `*${index + 1}*) ${option}`).join('\n\n'),
-
+                (list_api_response.data.items as Array<any>).forEach((value) => {
+                    message.addAttachment({
+                        color: value.backgroundColor,
+                        text: value.summary,
+                        actions: [{
+                            type: MessageActionType.BUTTON,
+                            text: 'Set as default',
+                            msg_in_chat_window: true,
+                            msg: `/calendar configure ${value.id}`,
+                        }],
+                    });
                 });
 
-                message.addAttachment({
-                    color: '#73a7ce',
-                    actionButtonsAlignment: MessageActionButtonsAlignment.HORIZONTAL,
-                    actions: all_calendars.map((option: string, index: number) => ({
-                        type: MessageActionType.BUTTON,
-                        text: `${index + 1}`,
-                        msg_in_chat_window: true,
-                        msg: `/calendar configure ${all_calendars[index]}`,
-                    })),
-                });
+                // console.log('This is calendar name inside list command:', all_calendars[2])
+                // message.addAttachment({
+                //     color: '#73a7ce',
+                //     text: all_calendars.map((option, index) => `*${index + 1}*) ${option}`).join('\n\n'),
+
+                // });
+
+                // message.addAttachment({
+                //     color: '#73a7ce',
+                //     actionButtonsAlignment: MessageActionButtonsAlignment.HORIZONTAL,
+                //     actions: all_calendars.map((option: string, index: number) => ({
+                //         type: MessageActionType.BUTTON,
+                //         text: `${index + 1}`,
+                //         msg_in_chat_window: true,
+                //         msg: `/calendar configure ${all_calendars[index]}`,
+                //     })),
+                // });
                 await modify.getCreator().finish(message);
 
 
